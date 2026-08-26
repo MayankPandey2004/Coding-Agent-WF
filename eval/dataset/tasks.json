@@ -1,0 +1,92 @@
+[
+  {
+    "id": "01_simple_function",
+    "prompt": "write a function called add(a, b) that returns the sum, save it to eval_add.py, then write and run a pytest test for it",
+    "expected_file": "eval_add.py",
+    "test_snippet": "from eval_add import add\ndef test_add(): assert add(2, 3) == 5\nassert add(-1, 1) == 0"
+  },
+  {
+    "id": "02_edge_case_handling",
+    "prompt": "write a function called safe_divide(a, b) that returns a/b, but raises ValueError with message 'cannot divide by zero' if b is 0, save it to eval_divide.py",
+    "expected_file": "eval_divide.py",
+    "test_snippet": "import pytest\nfrom eval_divide import safe_divide\ndef test_divide():\n    assert safe_divide(10, 2) == 5\n    with pytest.raises(ValueError):\n        safe_divide(5, 0)"
+  },
+  {
+    "id": "03_string_manipulation",
+    "prompt": "write a function called reverse_words(s) that reverses the order of words in a sentence (not the letters), save it to eval_reverse.py",
+    "expected_file": "eval_reverse.py",
+    "test_snippet": "from eval_reverse import reverse_words\ndef test_reverse():\n    assert reverse_words('hello world') == 'world hello'\n    assert reverse_words('a b c') == 'c b a'"
+  },
+  {
+    "id": "04_list_processing",
+    "prompt": "write a function called dedupe_preserve_order(lst) that removes duplicates from a list while preserving the original order of first occurrence, save it to eval_dedupe.py",
+    "expected_file": "eval_dedupe.py",
+    "test_snippet": "from eval_dedupe import dedupe_preserve_order\ndef test_dedupe():\n    assert dedupe_preserve_order([1,2,2,3,1]) == [1,2,3]\n    assert dedupe_preserve_order([]) == []"
+  },
+  {
+    "id": "05_class_design",
+    "prompt": "write a class called Counter with methods increment(), decrement(), and value() that tracks a running integer count starting at 0, save it to eval_counter.py",
+    "expected_file": "eval_counter.py",
+    "test_snippet": "from eval_counter import Counter\ndef test_counter():\n    c = Counter()\n    c.increment()\n    c.increment()\n    c.decrement()\n    assert c.value() == 1"
+  },
+  {
+    "id": "06_recursion",
+    "prompt": "write a function called factorial(n) that computes n! recursively, handling n=0 as a base case returning 1, save it to eval_factorial.py",
+    "expected_file": "eval_factorial.py",
+    "test_snippet": "from eval_factorial import factorial\ndef test_factorial():\n    assert factorial(0) == 1\n    assert factorial(5) == 120"
+  },
+  {
+    "id": "07_binary_search",
+    "prompt": "write a function called binary_search(arr, target) that performs binary search on a sorted array and returns the index of target if found, -1 otherwise, save it to eval_bsearch.py",
+    "expected_file": "eval_bsearch.py",
+    "test_snippet": "from eval_bsearch import binary_search\ndef test_bsearch():\n    assert binary_search([1, 3, 5, 7, 9], 5) == 2\n    assert binary_search([1, 3, 5, 7, 9], 6) == -1\n    assert binary_search([], 1) == -1"
+  },
+  {
+    "id": "08_merge_sorted",
+    "prompt": "write a function called merge_sorted(arr1, arr2) that merges two sorted arrays into one sorted array, save it to eval_merge.py",
+    "expected_file": "eval_merge.py",
+    "test_snippet": "from eval_merge import merge_sorted\ndef test_merge():\n    assert merge_sorted([1, 3, 5], [2, 4, 6]) == [1, 2, 3, 4, 5, 6]\n    assert merge_sorted([], [1, 2]) == [1, 2]\n    assert merge_sorted([1], [1]) == [1, 1]"
+  },
+  {
+    "id": "09_palindrome",
+    "prompt": "write a function called is_palindrome(s) that checks if a string is a palindrome (ignoring spaces and case), save it to eval_palindrome.py",
+    "expected_file": "eval_palindrome.py",
+    "test_snippet": "from eval_palindrome import is_palindrome\ndef test_palindrome():\n    assert is_palindrome('A man a plan a canal Panama') == True\n    assert is_palindrome('hello') == False\n    assert is_palindrome('') == True"
+  },
+  {
+    "id": "10_two_sum",
+    "prompt": "write a function called two_sum(nums, target) that returns indices of two numbers that add up to target, save it to eval_twosum.py",
+    "expected_file": "eval_twosum.py",
+    "test_snippet": "from eval_twosum import two_sum\ndef test_twosum():\n    result = two_sum([2, 7, 11, 15], 9)\n    assert 2 in result and 7 in result\n    result = two_sum([3, 3], 6)\n    assert len(result) == 2"
+  },
+  {
+    "id": "11_flatten_list",
+    "prompt": "write a function called flatten(nested_list) that recursively flattens a nested list into a single-level list, save it to eval_flatten.py",
+    "expected_file": "eval_flatten.py",
+    "test_snippet": "from eval_flatten import flatten\ndef test_flatten():\n    assert flatten([1, [2, [3, 4]], 5]) == [1, 2, 3, 4, 5]\n    assert flatten([]) == []\n    assert flatten([1, 2, 3]) == [1, 2, 3]"
+  },
+  {
+    "id": "12_valid_parentheses",
+    "prompt": "write a function called is_valid(s) that checks if parentheses in string s are balanced, save it to eval_parens.py",
+    "expected_file": "eval_parens.py",
+    "test_snippet": "from eval_parens import is_valid\ndef test_valid():\n    assert is_valid('()[]{}') == True\n    assert is_valid('([)]') == False\n    assert is_valid('') == True"
+  },
+  {
+    "id": "13_longest_substring",
+    "prompt": "write a function called longest_substring_without_repeating(s) that finds the length of the longest substring without repeating characters, save it to eval_longest.py",
+    "expected_file": "eval_longest.py",
+    "test_snippet": "from eval_longest import longest_substring_without_repeating\ndef test_longest():\n    assert longest_substring_without_repeating('abcabcbb') == 3\n    assert longest_substring_without_repeating('bbbbb') == 1\n    assert longest_substring_without_repeating('au') == 2"
+  },
+  {
+    "id": "14_roman_numeral",
+    "prompt": "write a function called roman_to_int(s) that converts a Roman numeral string to an integer, save it to eval_roman.py",
+    "expected_file": "eval_roman.py",
+    "test_snippet": "from eval_roman import roman_to_int\ndef test_roman():\n    assert roman_to_int('III') == 3\n    assert roman_to_int('LVIII') == 58\n    assert roman_to_int('MCMXCIV') == 1994"
+  },
+  {
+    "id": "15_anagram_check",
+    "prompt": "write a function called are_anagrams(s1, s2) that checks if two strings are anagrams, save it to eval_anagram.py",
+    "expected_file": "eval_anagram.py",
+    "test_snippet": "from eval_anagram import are_anagrams\ndef test_anagram():\n    assert are_anagrams('listen', 'silent') == True\n    assert are_anagrams('hello', 'world') == False\n    assert are_anagrams('', '') == True"
+  }
+]
