@@ -14,17 +14,17 @@ you would do."""
 
 
 def planner_node(state: AgentState) -> dict:
-    if state.get("attempt_count") is None:
-        return {
-            "messages": [
-                SystemMessage(content=CODER_SYSTEM_PROMPT),
-                HumanMessage(content=state["task"]),
-            ],
-            "attempt_count": 0,
-            "max_retries": state.get("max_retries", 3),
-            "status": "in_progress",
-        }
-    return {}
+    is_first_ever = state.get("attempt_count") is None
+    messages = []
+    if is_first_ever:
+        messages.append(SystemMessage(content=CODER_SYSTEM_PROMPT))
+    messages.append(HumanMessage(content=state["task"]))
+    return {
+        "messages": messages,
+        "attempt_count": 0,
+        "max_retries": state.get("max_retries", 3),
+        "status": "in_progress",
+    }
 
 
 def coder_node(state: AgentState) -> dict:

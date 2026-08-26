@@ -15,6 +15,8 @@ def main():
         task = input("\nTask: ").strip()
         if task.lower() in ("exit", "quit"):
             break
+        if not task:
+            continue
 
         result = app.invoke({"task": task}, config=config)
 
