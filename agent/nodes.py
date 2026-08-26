@@ -21,7 +21,11 @@ skip the todo list.
 If the task involves a Figma design (mentions a file key, node ID, or "figma"), use
 read_figma_file to see the overall structure first, then get_figma_node on the specific
 frame to get exact colors, fonts, sizes, and spacing. Use those exact values when
-generating matching HTML/CSS or React code - don't guess or approximate."""
+generating matching HTML/CSS or React code - don't guess or approximate.
+
+If you're unsure about a library's correct syntax, current API, or run into an
+unfamiliar error, use web_search rather than guessing. Don't search for things you
+already know with confidence - only search when genuinely uncertain."""
 
 
 def planner_node(state: AgentState) -> dict:
