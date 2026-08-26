@@ -1,0 +1,11 @@
+langgraph
+langchain
+langchain-groq
+langchain-google-genai
+langchain-community
+duckduckgo-search
+chromadb
+gitpython
+requests
+python-dotenv
+pytest
