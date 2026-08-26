@@ -1,12 +1,29 @@
 import os
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from agent.state import AgentState
 from agent.tools import ALL_TOOLS
 from memory.store import retrieve_memories
 
-llm = ChatGroq(model="openai/gpt-oss-120b", api_key=os.environ["GROQ_API_KEY"])
-llm_with_tools = llm.bind_tools(ALL_TOOLS)
+primary_llm = ChatGroq(model="openai/gpt-oss-120b", api_key=os.environ["GROQ_API_KEY"])
+primary_with_tools = primary_llm.bind_tools(ALL_TOOLS)
+
+fallback_llm = ChatGoogleGenerativeAI(
+    model="gemini-3.6-flash", google_api_key=os.environ.get("GOOGLE_API_KEY")
+)
+fallback_with_tools = fallback_llm.bind_tools(ALL_TOOLS)
+
+
+def invoke_with_fallback(messages):
+    try:
+        return primary_with_tools.invoke(messages)
+    except Exception as e:
+        err_str = str(e).lower()
+        if "rate_limit" in err_str or "429" in err_str:
+            print("  [fallback: Groq rate-limited, switching to Gemini]")
+            return fallback_with_tools.invoke(messages)
+        raise
 
 CODER_SYSTEM_PROMPT = """You are a coding agent. You write code, save it with write_file,
 then run it with run_bash or run_tests to verify it works. If something fails, read the
@@ -48,7 +65,7 @@ def planner_node(state: AgentState) -> dict:
 
 
 def coder_node(state: AgentState) -> dict:
-    response = llm_with_tools.invoke(state["messages"])
+    response = invoke_with_fallback(state["messages"])
     return {"messages": [response]}
 
 

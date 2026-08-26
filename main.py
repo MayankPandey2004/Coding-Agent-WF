@@ -41,10 +41,24 @@ def main():
 
         final_state = app.get_state(config).values
         print("\n--- Final status:", final_state.get("status"), "| attempts:", final_state.get("attempt_count"), "---")
+        def extract_text(msg_content):
+            if isinstance(msg_content, str):
+                return msg_content
+            if isinstance(msg_content, list):
+                parts = []
+                for block in msg_content:
+                    if isinstance(block, dict) and block.get("type") == "text":
+                        parts.append(block.get("text", ""))
+                    elif isinstance(block, str):
+                        parts.append(block)
+                return "\n".join(parts)
+            return str(msg_content)
+
         last_ai = [m for m in final_state["messages"] if m.type == "ai"]
         if last_ai:
-            print(last_ai[-1].content)
-            summary = f"Task: {task}\nOutcome ({final_state.get('status')}): {last_ai[-1].content[:300]}"
+            clean_text = extract_text(last_ai[-1].content)
+            print(clean_text)
+            summary = f"Task: {task}\nOutcome ({final_state.get('status')}): {clean_text[:300]}"
             save_memory(summary)
 
 if __name__ == "__main__":
