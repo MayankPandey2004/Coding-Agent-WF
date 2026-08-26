@@ -1,5 +1,7 @@
 import subprocess
 import os
+import json
+import requests
 from langchain_core.tools import tool
 
 WORKDIR = os.path.abspath("./sandbox")
@@ -106,6 +108,56 @@ def todo_complete(index: int) -> str:
     return f"ERROR: no todo item at index {index}"
 
 
+FIGMA_TOKEN = os.environ.get("FIGMA_TOKEN")
+FIGMA_API_BASE = "https://api.figma.com/v1"
+
+
+@tool
+def read_figma_file(file_key: str) -> str:
+    """Fetch the full node tree of a Figma file given its file key. Returns a
+    trimmed JSON summary of top-level structure."""
+    try:
+        resp = requests.get(
+            f"{FIGMA_API_BASE}/files/{file_key}",
+            headers={"X-Figma-Token": FIGMA_TOKEN},
+        )
+        if resp.status_code != 200:
+            return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
+        data = resp.json()
+
+        def summarize(node, depth=0):
+            indent = "  " * depth
+            line = f"{indent}- {node.get('name')} ({node.get('type')}) id={node.get('id')}"
+            lines = [line]
+            for child in node.get("children", [])[:10]:
+                lines.extend(summarize(child, depth + 1))
+            return lines
+
+        tree = "\n".join(summarize(data["document"]))
+        return tree[:3000]
+    except Exception as e:
+        return f"ERROR reading Figma file: {e}"
+
+
+@tool
+def get_figma_node(file_key: str, node_id: str) -> str:
+    """Fetch detailed design properties (fills, typography, spacing, layout)
+    for a specific node in a Figma file, given the file key and node ID
+    (e.g. '3:4')."""
+    try:
+        resp = requests.get(
+            f"{FIGMA_API_BASE}/files/{file_key}/nodes",
+            headers={"X-Figma-Token": FIGMA_TOKEN},
+            params={"ids": node_id},
+        )
+        if resp.status_code != 200:
+            return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
+        data = resp.json()
+        return json.dumps(data, indent=2)[:4000]
+    except Exception as e:
+        return f"ERROR reading Figma node: {e}"
+
+
 ALL_TOOLS = [
     read_file,
     write_file,
@@ -115,4 +167,6 @@ ALL_TOOLS = [
     todo_write,
     todo_read,
     todo_complete,
+    read_figma_file,
+    get_figma_node,
 ]
