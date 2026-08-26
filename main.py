@@ -20,13 +20,24 @@ def main():
             continue
 
         result = None
-        for step in app.stream({"task": task}, config=config, stream_mode="updates"):
-            for node_name, node_output in step.items():
-                if node_name == "coder":
-                    ai_msg = node_output["messages"][-1]
-                    for tc in getattr(ai_msg, "tool_calls", []) or []:
-                        print(f"  [tool call] {tc['name']}({tc['args']})")
-                result = node_output
+        rate_limited = False
+        try:
+            for step in app.stream({"task": task}, config=config, stream_mode="updates"):
+                for node_name, node_output in step.items():
+                    if node_name == "coder":
+                        ai_msg = node_output["messages"][-1]
+                        for tc in getattr(ai_msg, "tool_calls", []) or []:
+                            print(f"  [tool call] {tc['name']}({tc['args']})")
+                    result = node_output
+        except Exception as e:
+            if "rate_limit" in str(e).lower() or "429" in str(e):
+                print("\n⚠️  Rate limit reached on the LLM provider. Please wait a few minutes and try again.")
+                rate_limited = True
+            else:
+                raise
+
+        if rate_limited:
+            continue
 
         final_state = app.get_state(config).values
         print("\n--- Final status:", final_state.get("status"), "| attempts:", final_state.get("attempt_count"), "---")
