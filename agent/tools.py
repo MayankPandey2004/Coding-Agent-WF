@@ -264,6 +264,24 @@ def get_figma_node(file_key: str, node_id: str) -> str:
         return f"ERROR reading Figma node: {e}"
 
 
+@tool
+def web_search(query: str, max_results: int = 5) -> str:
+    """Search the web for current information, documentation, or error messages.
+    Useful when you're unsure about a library's API, need to check current syntax,
+    or want to look up an unfamiliar error."""
+    try:
+        from ddgs import DDGS
+        results = []
+        with DDGS() as ddgs:
+            for r in ddgs.text(query, max_results=max_results):
+                results.append(f"- {r['title']}: {r['body'][:200]}\n  {r['href']}")
+        if not results:
+            return "No results found."
+        return "\n".join(results)
+    except Exception as e:
+        return f"ERROR performing web search: {e}"
+
+
 ALL_TOOLS = [
     read_file,
     write_file,
@@ -275,4 +293,5 @@ ALL_TOOLS = [
     todo_complete,
     read_figma_file,
     get_figma_node,
+    web_search,
 ]
