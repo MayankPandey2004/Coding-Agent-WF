@@ -18,7 +18,7 @@ def main():
 
         result = app.invoke({"task": task}, config=config)
 
-        print("\n--- Final status:", result.get("status"), "---")
+        print("\n--- Final status:", result.get("status"), "| attempts:", result.get("attempt_count"), "---")
         last_ai = [m for m in result["messages"] if m.type == "ai"]
         if last_ai:
             print(last_ai[-1].content)
