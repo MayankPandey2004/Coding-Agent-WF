@@ -3,6 +3,7 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from agent.state import AgentState
 from agent.tools import ALL_TOOLS
+from memory.store import retrieve_memories
 
 llm = ChatGroq(model="openai/gpt-oss-120b", api_key=os.environ["GROQ_API_KEY"])
 llm_with_tools = llm.bind_tools(ALL_TOOLS)
@@ -17,7 +18,12 @@ def planner_node(state: AgentState) -> dict:
     is_first_ever = state.get("attempt_count") is None
     messages = []
     if is_first_ever:
-        messages.append(SystemMessage(content=CODER_SYSTEM_PROMPT))
+        memories = retrieve_memories(state["task"], k=3)
+        prompt = CODER_SYSTEM_PROMPT
+        if memories:
+            memory_text = "\n".join(f"- {m}" for m in memories)
+            prompt += f"\n\nRelevant context from past sessions:\n{memory_text}"
+        messages.append(SystemMessage(content=prompt))
     messages.append(HumanMessage(content=state["task"]))
     return {
         "messages": messages,
