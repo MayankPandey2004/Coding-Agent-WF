@@ -72,4 +72,47 @@ def run_tests(test_path: str = ".") -> str:
     return run_bash.invoke({"command": f"pytest {test_path} -q", "timeout": 30})
 
 
-ALL_TOOLS = [read_file, write_file, list_directory, run_bash, run_tests]
+_TODO_LIST = []
+
+
+@tool
+def todo_write(items: list[str]) -> str:
+    """Set or replace the current todo list with a list of step descriptions.
+    Call this at the start of a multi-step task to plan out the work."""
+    global _TODO_LIST
+    _TODO_LIST = [{"text": item, "done": False} for item in items]
+    return f"Todo list set with {len(items)} items."
+
+
+@tool
+def todo_read() -> str:
+    """Read the current todo list and its completion status."""
+    if not _TODO_LIST:
+        return "No todo items set."
+    lines = []
+    for i, item in enumerate(_TODO_LIST):
+        mark = "[x]" if item["done"] else "[ ]"
+        lines.append(f"{i}. {mark} {item['text']}")
+    return "\n".join(lines)
+
+
+@tool
+def todo_complete(index: int) -> str:
+    """Mark the todo item at the given index (0-based) as complete."""
+    global _TODO_LIST
+    if 0 <= index < len(_TODO_LIST):
+        _TODO_LIST[index]["done"] = True
+        return f"Marked item {index} as complete."
+    return f"ERROR: no todo item at index {index}"
+
+
+ALL_TOOLS = [
+    read_file,
+    write_file,
+    list_directory,
+    run_bash,
+    run_tests,
+    todo_write,
+    todo_read,
+    todo_complete,
+]

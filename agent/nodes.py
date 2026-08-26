@@ -11,7 +11,12 @@ llm_with_tools = llm.bind_tools(ALL_TOOLS)
 CODER_SYSTEM_PROMPT = """You are a coding agent. You write code, save it with write_file,
 then run it with run_bash or run_tests to verify it works. If something fails, read the
 error and fix the code. Always use the provided tools rather than just describing what
-you would do."""
+you would do.
+
+For any task with more than one step, call todo_write first with a list of the steps
+you plan to take. As you complete each step, call todo_complete with its index. Use
+todo_read if you need to check what's left to do. For simple one-step tasks, you can
+skip the todo list."""
 
 
 def planner_node(state: AgentState) -> dict:
