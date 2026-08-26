@@ -16,7 +16,12 @@ you would do.
 For any task with more than one step, call todo_write first with a list of the steps
 you plan to take. As you complete each step, call todo_complete with its index. Use
 todo_read if you need to check what's left to do. For simple one-step tasks, you can
-skip the todo list."""
+skip the todo list.
+
+If the task involves a Figma design (mentions a file key, node ID, or "figma"), use
+read_figma_file to see the overall structure first, then get_figma_node on the specific
+frame to get exact colors, fonts, sizes, and spacing. Use those exact values when
+generating matching HTML/CSS or React code - don't guess or approximate."""
 
 
 def planner_node(state: AgentState) -> dict:

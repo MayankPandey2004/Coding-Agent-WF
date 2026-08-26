@@ -110,6 +110,26 @@ def todo_complete(index: int) -> str:
 
 FIGMA_TOKEN = os.environ.get("FIGMA_TOKEN")
 FIGMA_API_BASE = "https://api.figma.com/v1"
+FIGMA_CACHE_DIR = os.path.abspath("./figma_cache")
+os.makedirs(FIGMA_CACHE_DIR, exist_ok=True)
+
+
+def _cache_path(key: str) -> str:
+    safe_key = key.replace("/", "_").replace(":", "_")
+    return os.path.join(FIGMA_CACHE_DIR, f"{safe_key}.json")
+
+
+def _load_cache(key: str):
+    path = _cache_path(key)
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return None
+
+
+def _save_cache(key: str, data):
+    with open(_cache_path(key), "w") as f:
+        json.dump(data, f)
 
 
 @tool
@@ -117,13 +137,17 @@ def read_figma_file(file_key: str) -> str:
     """Fetch the full node tree of a Figma file given its file key. Returns a
     trimmed JSON summary of top-level structure."""
     try:
-        resp = requests.get(
-            f"{FIGMA_API_BASE}/files/{file_key}",
-            headers={"X-Figma-Token": FIGMA_TOKEN},
-        )
-        if resp.status_code != 200:
-            return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
-        data = resp.json()
+        cache_key = f"file_{file_key}"
+        data = _load_cache(cache_key)
+        if data is None:
+            resp = requests.get(
+                f"{FIGMA_API_BASE}/files/{file_key}",
+                headers={"X-Figma-Token": FIGMA_TOKEN},
+            )
+            if resp.status_code != 200:
+                return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
+            data = resp.json()
+            _save_cache(cache_key, data)
 
         def summarize(node, depth=0):
             indent = "  " * depth
@@ -139,21 +163,103 @@ def read_figma_file(file_key: str) -> str:
         return f"ERROR reading Figma file: {e}"
 
 
+def _rgba_to_hex(color):
+    r = round(color.get("r", 0) * 255)
+    g = round(color.get("g", 0) * 255)
+    b = round(color.get("b", 0) * 255)
+    a = color.get("a", 1.0)
+    if a < 1.0:
+        return f"rgba({r}, {g}, {b}, {round(a, 2)})"
+    return f"#{r:02X}{g:02X}{b:02X}"
+
+
+def _extract_props(node, out, depth=0):
+    if depth > 6:
+        return
+    name = node.get("name", "")
+    ntype = node.get("type", "")
+    entry = {"name": name, "type": ntype}
+
+    fills = node.get("fills", [])
+    if fills and fills[0].get("type") == "SOLID":
+        entry["fill"] = _rgba_to_hex(fills[0]["color"])
+
+    if "cornerRadius" in node:
+        entry["cornerRadius"] = node["cornerRadius"]
+
+    bbox = node.get("absoluteBoundingBox")
+    if bbox:
+        entry["width"] = round(bbox.get("width", 0), 1)
+        entry["height"] = round(bbox.get("height", 0), 1)
+
+    style = node.get("style")
+    if style:
+        entry["font"] = {
+            "family": style.get("fontFamily"),
+            "weight": style.get("fontWeight"),
+            "size": style.get("fontSize"),
+            "align": style.get("textAlignHorizontal"),
+        }
+
+    if node.get("type") == "TEXT":
+        entry["text"] = node.get("characters")
+
+    padding_keys = ["paddingLeft", "paddingRight", "paddingTop", "paddingBottom"]
+    padding = {k: node[k] for k in padding_keys if k in node}
+    if padding:
+        entry["padding"] = padding
+
+    out.append(entry)
+
+    for child in node.get("children", []):
+        _extract_props(child, out, depth + 1)
+
+
 @tool
 def get_figma_node(file_key: str, node_id: str) -> str:
-    """Fetch detailed design properties (fills, typography, spacing, layout)
-    for a specific node in a Figma file, given the file key and node ID
-    (e.g. '3:4')."""
+    """Fetch condensed design properties (fill color as hex, font family/size/weight,
+    corner radius, dimensions, padding, text content) for a specific node and its
+    children in a Figma file, given the file key and node ID (e.g. '3:4')."""
     try:
-        resp = requests.get(
-            f"{FIGMA_API_BASE}/files/{file_key}/nodes",
-            headers={"X-Figma-Token": FIGMA_TOKEN},
-            params={"ids": node_id},
-        )
-        if resp.status_code != 200:
-            return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
-        data = resp.json()
-        return json.dumps(data, indent=2)[:4000]
+        cache_key = f"node_{file_key}_{node_id}"
+        data = _load_cache(cache_key)
+        if data is None:
+            resp = requests.get(
+                f"{FIGMA_API_BASE}/files/{file_key}/nodes",
+                headers={"X-Figma-Token": FIGMA_TOKEN},
+                params={"ids": node_id},
+            )
+            if resp.status_code != 200:
+                return f"ERROR: Figma API returned {resp.status_code}: {resp.text[:300]}"
+            data = resp.json()
+            _save_cache(cache_key, data)
+        node_doc = data["nodes"][node_id]["document"]
+
+        props = []
+        _extract_props(node_doc, props)
+
+        lines = []
+        for p in props:
+            line = f"- {p['name']} ({p['type']})"
+            details = []
+            if "fill" in p:
+                details.append(f"fill={p['fill']}")
+            if "cornerRadius" in p:
+                details.append(f"cornerRadius={p['cornerRadius']}")
+            if "width" in p:
+                details.append(f"size={p['width']}x{p['height']}")
+            if "font" in p:
+                f = p["font"]
+                details.append(f"font={f['family']} {f['weight']}w {f['size']}px align={f['align']}")
+            if "text" in p:
+                details.append(f'text="{p["text"]}"')
+            if "padding" in p:
+                details.append(f"padding={p['padding']}")
+            if details:
+                line += ": " + ", ".join(details)
+            lines.append(line)
+
+        return "\n".join(lines)
     except Exception as e:
         return f"ERROR reading Figma node: {e}"
 
