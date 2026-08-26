@@ -64,8 +64,34 @@ def planner_node(state: AgentState) -> dict:
     }
 
 
+def router_node(state: AgentState) -> dict:
+    task_lower = state["task"].lower()
+
+    if any(kw in task_lower for kw in ["figma", "file key", "node id", "design"]):
+        task_type = "figma"
+    elif any(kw in task_lower for kw in ["search the web", "look up", "latest version", "current"]):
+        task_type = "research"
+    else:
+        task_type = "code"
+
+    print(f"  [router] classified as: {task_type}")
+    return {"task_type": task_type}
+
+
 def coder_node(state: AgentState) -> dict:
-    response = invoke_with_fallback(state["messages"])
+    messages = list(state["messages"])
+    task_type = state.get("task_type", "code")
+
+    hint = None
+    if task_type == "figma":
+        hint = "Reminder: this is a design task. Use read_figma_file and get_figma_node to get exact design values before writing code."
+    elif task_type == "research":
+        hint = "Reminder: this task needs current information. Use web_search before answering."
+
+    if hint and len(messages) <= 2:
+        messages.append(HumanMessage(content=hint))
+
+    response = invoke_with_fallback(messages)
     return {"messages": [response]}
 
 

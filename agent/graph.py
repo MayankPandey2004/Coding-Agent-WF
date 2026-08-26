@@ -6,6 +6,7 @@ from agent.state import AgentState
 from agent.tools import ALL_TOOLS
 from agent.nodes import (
     planner_node,
+    router_node,
     coder_node,
     evaluator_node,
     should_continue,
@@ -17,12 +18,14 @@ def build_graph():
     graph = StateGraph(AgentState)
 
     graph.add_node("planner", planner_node)
+    graph.add_node("router", router_node)
     graph.add_node("coder", coder_node)
     graph.add_node("tools", ToolNode(ALL_TOOLS))
     graph.add_node("evaluator", evaluator_node)
 
     graph.add_edge(START, "planner")
-    graph.add_edge("planner", "coder")
+    graph.add_edge("planner", "router")
+    graph.add_edge("router", "coder")
 
     graph.add_conditional_edges(
         "coder", should_continue, {"tools": "tools", "evaluate": "evaluator"}
