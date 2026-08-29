@@ -1,13 +1,9 @@
 def safe_divide(a, b):
-    """Return a divided by b, raising a ValueError if b is zero.
+    """Return a divided by b, raising ValueError if b is zero.
 
     Args:
-        a (numeric): Numerator.
-        b (numeric): Denominator.
-
-    Returns:
-        numeric: The result of a / b.
-
+        a: Numerator (int or float).
+        b: Denominator (int or float).
     Raises:
         ValueError: If b is zero.
     """
