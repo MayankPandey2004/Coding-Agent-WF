@@ -1,20 +1,11 @@
 def dedupe_preserve_order(lst):
     """Return a new list with duplicates removed while preserving the original order.
 
-    Parameters
-    ----------
-    lst : list
-        The input list from which to remove duplicate items.
+    Args:
+        lst (list): The input list which may contain duplicate elements.
 
-    Returns
-    -------
-    list
-        A list containing the first occurrence of each element in ``lst``.
-
-    Examples
-    --------
-    >>> dedupe_preserve_order([1, 2, 3, 2, 1, 4])
-    [1, 2, 3, 4]
+    Returns:
+        list: A list containing the first occurrence of each element from ``lst``.
     """
     seen = set()
     result = []
